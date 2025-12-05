@@ -1,0 +1,91 @@
+<div class="chat-container" *ngIf="chat">
+  <header class="chat-header">
+    <button class="btn-back" (click)="goBack()">
+      ← Voltar
+    </button>
+    <div class="chat-info">
+      <div class="assistant-avatar" *ngIf="chat.foto_assistente">
+        <img [src]="chat.foto_assistente" [alt]="chat.nome_assistente" />
+      </div>
+      <div class="assistant-avatar-placeholder" *ngIf="!chat.foto_assistente">
+        {{ chat.nome_assistente.charAt(0) }}
+      </div>
+      <div class="chat-details">
+        <h2>{{ chat.nome_chat }}</h2>
+        <p class="assistant-name">{{ chat.nome_assistente }}</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="messages-container">
+    <div class="loading-chat" *ngIf="loading">
+      Carregando mensagens...
+    </div>
+
+    <div class="messages" *ngIf="!loading">
+      <div 
+        *ngFor="let message of chat.mensagens"
+        class="message"
+        [class.message-user]="message.tipo_mensagem === 'Usuario'"
+        [class.message-assistant]="message.tipo_mensagem === 'Assistente'"
+      >
+        <div class="message-header">
+          <span class="message-author">
+            {{ message.tipo_mensagem === 'Usuario' ? 'Você' : chat.nome_assistente }}
+          </span>
+          <span class="message-time" *ngIf="message.data_mensagem">
+            {{ formatDate(message.data_mensagem) }}
+          </span>
+        </div>
+        <div class="message-content" [innerHTML]="message.mensagem"></div>
+      </div>
+
+      <div class="message message-assistant processing" *ngIf="processingMessageId">
+        <div class="message-header">
+          <span class="message-author">{{ chat.nome_assistente }}</span>
+        </div>
+        <div class="message-content">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          Processando sua mensagem...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="message-input-container">
+    <textarea
+      [(ngModel)]="newMessage"
+      placeholder="Digite sua mensagem..."
+      [disabled]="sending || !!processingMessageId"
+      (keydown)="onKeyDown($event)"
+      rows="3"
+    ></textarea>
+    <button 
+      (click)="sendMessage()"
+      [disabled]="sending || !newMessage.trim() || !!processingMessageId"
+      class="btn-send"
+    >
+      {{ sending ? 'Enviando...' : 'Enviar' }}
+    </button>
+  </div>
+</div>
+
+<div class="loading-page" *ngIf="!chat && loading">
+  Carregando chat...
+</div>
+
+<div class="error-page" *ngIf="!chat && !loading && errorMessage">
+  <div class="error-content">
+    <h2>Erro ao carregar chat</h2>
+    <p>{{ errorMessage }}</p>
+    <button class="btn-back" (click)="goBack()">← Voltar para lista</button>
+  </div>
+</div>
