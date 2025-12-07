@@ -8,7 +8,7 @@ import { LoginRequest, LoginResponse, AuthUser } from '../models/auth.model';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'https://lawrana.com';
+  private readonly API_URL = '/api';
   private readonly TOKEN_KEY = 'auth_token';
   private readonly EXPIRATION_KEY = 'token_expiration';
   

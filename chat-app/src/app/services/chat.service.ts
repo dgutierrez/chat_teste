@@ -13,7 +13,7 @@ import {
   providedIn: 'root'
 })
 export class ChatService {
-  private readonly API_URL = 'https://lawrana.com';
+  private readonly API_URL = '/api';
 
   constructor(private http: HttpClient) {}
 

@@ -11,7 +11,7 @@ import {
   providedIn: 'root'
 })
 export class MessageService {
-  private readonly API_URL = 'https://lawrana.com';
+  private readonly API_URL = '/api';
 
   constructor(private http: HttpClient) {}
 
