@@ -8,24 +8,24 @@ import {
   ChatDetail,
   ChatDetailResponse 
 } from '../models/chat.model';
+import { API_URL } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  private readonly API_URL = '/api';
 
   constructor(private http: HttpClient) {}
 
   listChats(): Observable<ChatListResponse> {
-    return this.http.get<ChatListResponse>(`${this.API_URL}/chat`);
+    return this.http.get<ChatListResponse>(`${API_URL}/chat`);
   }
 
   createChat(request: CreateChatRequest): Observable<ChatDetail> {
-    return this.http.post<ChatDetail>(`${this.API_URL}/chat`, request);
+    return this.http.post<ChatDetail>(`${API_URL}/chat`, request);
   }
 
   getChatById(chatId: string): Observable<ChatDetailResponse> {
-    return this.http.get<ChatDetailResponse>(`${this.API_URL}/chat/${chatId}`);
+    return this.http.get<ChatDetailResponse>(`${API_URL}/chat/${chatId}`);
   }
 }

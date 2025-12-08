@@ -3,12 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { LoginRequest, LoginResponse, AuthUser } from '../models/auth.model';
+import { API_URL } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = '/api';
   private readonly TOKEN_KEY = 'auth_token';
   private readonly EXPIRATION_KEY = 'token_expiration';
   
@@ -18,7 +18,7 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.API_URL}/usuario/login`, credentials)
+    return this.http.post<LoginResponse>(`${API_URL}/usuario/login`, credentials)
       .pipe(
         tap(response => {
           const authUser: AuthUser = {
