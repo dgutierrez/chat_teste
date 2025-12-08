@@ -154,6 +154,33 @@
   opacity: 0.7;
 }
 
+.message-document {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.message-user .message-document {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.document-icon {
+  font-size: 1.5rem;
+}
+
+.document-name {
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .message-content {
   line-height: 1.5;
   white-space: pre-wrap;
@@ -204,6 +231,42 @@
   display: flex;
   gap: 1rem;
   align-items: flex-end;
+}
+
+.btn-attach {
+  background-color: #f0f0f0;
+  color: #667eea;
+  border: 1px solid #ddd;
+  padding: 0.75rem 1rem;
+  border-radius: 5px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+}
+
+.btn-attach:hover:not(:disabled) {
+  background-color: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-attach:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-progress {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 0.75rem 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  border-top: 1px solid #bbdefb;
 }
 
 textarea {

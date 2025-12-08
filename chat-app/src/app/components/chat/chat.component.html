@@ -41,6 +41,10 @@
             {{ formatDate(message.data_mensagem) }}
           </span>
         </div>
+        <div class="message-document" *ngIf="message.nome_documento">
+          <span class="document-icon">📄</span>
+          <span class="document-name">{{ message.nome_documento }}</span>
+        </div>
         <div class="message-content" [innerHTML]="message.mensagem"></div>
       </div>
 
@@ -61,20 +65,43 @@
   </div>
 
   <div class="message-input-container">
+    <input 
+      type="file" 
+      #fileInput 
+      (change)="onFileSelected($event)"
+      accept="application/pdf"
+      style="display: none"
+    />
+    
+    <button 
+      type="button"
+      class="btn-attach"
+      (click)="triggerFileInput()"
+      [disabled]="uploading || sending || !!processingMessageId"
+      title="Anexar PDF (máx. 10MB)"
+    >
+      📎
+    </button>
+    
     <textarea
       [(ngModel)]="newMessage"
       placeholder="Digite sua mensagem..."
-      [disabled]="sending || !!processingMessageId"
+      [disabled]="sending || !!processingMessageId || uploading"
       (keydown)="onKeyDown($event)"
       rows="3"
     ></textarea>
+    
     <button 
       (click)="sendMessage()"
-      [disabled]="sending || !newMessage.trim() || !!processingMessageId"
+      [disabled]="sending || !newMessage.trim() || !!processingMessageId || uploading"
       class="btn-send"
     >
       {{ sending ? 'Enviando...' : 'Enviar' }}
     </button>
+  </div>
+  
+  <div class="upload-progress" *ngIf="uploadProgress">
+    {{ uploadProgress }}
   </div>
 </div>
 
