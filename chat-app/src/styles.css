@@ -1,4 +1,6 @@
 /* Estilos globais da aplicação */
+@import './styles/markdown.css';
+
 * {
   margin: 0;
   padding: 0;

@@ -23,7 +23,6 @@
   border-radius: 5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
 .btn-back:hover {
@@ -37,10 +36,13 @@
   flex: 1;
 }
 
-.assistant-avatar {
+.assistant-avatar, .assistant-avatar-placeholder {
   width: 50px;
   height: 50px;
   border-radius: 50%;
+}
+
+.assistant-avatar {
   overflow: hidden;
 }
 
@@ -51,9 +53,6 @@
 }
 
 .assistant-avatar-placeholder {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
   background-color: white;
   color: #667eea;
   display: flex;
@@ -81,6 +80,20 @@
   text-align: center;
 }
 
+.copy-success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 1rem 2rem;
+  text-align: center;
+  font-weight: 500;
+  animation: slideDown 0.3s;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -106,20 +119,13 @@
   padding: 1rem;
   border-radius: 10px;
   max-width: 80%;
-  animation: fadeIn 0.3s ease-in;
+  animation: fadeIn 0.3s;
   overflow: hidden;
-  word-wrap: break-word;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .message-user {
@@ -142,6 +148,29 @@
   align-items: center;
   margin-bottom: 0.5rem;
   font-size: 0.85rem;
+}
+
+.message-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-copy {
+  background-color: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 5px;
+  opacity: 0.8;
+  color: #667eea;
+}
+
+.btn-copy:hover {
+  opacity: 1;
+  background-color: rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
 }
 
 .message-user .message-header {
@@ -190,147 +219,11 @@
 
 .message-content {
   line-height: 1.6;
-  word-wrap: break-word;
   overflow-wrap: break-word;
-  word-break: break-word;
   max-width: 100%;
 }
 
-/* Estilos para Markdown */
-.message-assistant .message-content h1,
-.message-assistant .message-content h2,
-.message-assistant .message-content h3,
-.message-assistant .message-content h4,
-.message-assistant .message-content p,
-.message-assistant .message-content code,
-.message-assistant .message-content strong {
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.message-assistant .message-content h1,
-.message-assistant .message-content h2,
-.message-assistant .message-content h3,
-.message-assistant .message-content h4 {
-  margin: 1rem 0 0.5rem 0;
-  font-weight: 600;
-  color: #333;
-}
-
-.message-assistant .message-content h1 {
-  font-size: 1.5rem;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 0.3rem;
-}
-
-.message-assistant .message-content h2 {
-  font-size: 1.3rem;
-  color: #667eea;
-}
-
-.message-assistant .message-content h3 {
-  font-size: 1.15rem;
-}
-
-.message-assistant .message-content h4 {
-  font-size: 1.05rem;
-}
-
-.message-assistant .message-content ul,
-.message-assistant .message-content ol {
-  margin: 0.75rem 0;
-  padding-left: 2rem;
-  list-style-position: outside;
-}
-
-.message-assistant .message-content li {
-  margin: 0.35rem 0;
-  line-height: 1.6;
-  padding-left: 0.5rem;
-}
-
-.message-assistant .message-content p {
-  margin: 0.75rem 0;
-}
-
-.message-assistant .message-content code {
-  background-color: #f4f4f4;
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.9em;
-  color: #e01e5a;
-}
-
-.message-assistant .message-content pre {
-  background-color: #f4f4f4;
-  padding: 1rem;
-  border-radius: 5px;
-  overflow-x: auto;
-  margin: 1rem 0;
-  border-left: 3px solid #667eea;
-  max-width: 100%;
-}
-
-.message-assistant .message-content pre code {
-  background-color: transparent;
-  padding: 0;
-  color: #333;
-}
-
-.message-assistant .message-content blockquote {
-  border-left: 4px solid #667eea;
-  padding-left: 1rem;
-  margin: 1rem 0;
-  color: #666;
-  font-style: italic;
-}
-
-.message-assistant .message-content strong {
-  font-weight: 600;
-  color: #333;
-}
-
-.message-assistant .message-content em {
-  font-style: italic;
-}
-
-.message-assistant .message-content a {
-  color: #667eea;
-  text-decoration: none;
-}
-
-.message-assistant .message-content a:hover {
-  text-decoration: underline;
-}
-
-.message-assistant .message-content hr {
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 1.5rem 0;
-}
-
-.message-assistant .message-content table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1rem 0;
-}
-
-.message-assistant .message-content th,
-.message-assistant .message-content td {
-  border: 1px solid #ddd;
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.message-assistant .message-content th {
-  background-color: #f4f4f4;
-  font-weight: 600;
-}
-
-.processing {
-  opacity: 0.8;
-}
+.processing { opacity: 0.8; }
 
 .typing-indicator {
   display: inline-flex;
@@ -346,23 +239,12 @@
   animation: typing 1.4s infinite;
 }
 
-.typing-indicator span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-indicator span:nth-child(3) {
-  animation-delay: 0.4s;
-}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes typing {
-  0%, 60%, 100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-  30% {
-    transform: translateY(-10px);
-    opacity: 1;
-  }
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+  30% { transform: translateY(-10px); opacity: 1; }
 }
 
 .message-input-container {
@@ -440,10 +322,7 @@
   font-weight: 500;
 }
 
-.indexing-indicator {
-  display: inline-flex;
-  gap: 3px;
-}
+.indexing-indicator { display: inline-flex; gap: 3px; }
 
 .indexing-indicator span {
   width: 6px;
@@ -469,7 +348,7 @@
   color: white;
   font-weight: bold;
   font-size: 12px;
-  animation: checkPop 0.3s ease-out;
+  animation: checkPop 0.3s;
 }
 
 @keyframes checkPop {
@@ -492,7 +371,6 @@ textarea {
 textarea:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 textarea:disabled {

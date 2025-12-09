@@ -20,6 +20,10 @@
   <div class="error-message" *ngIf="errorMessage">
     {{ errorMessage }}
   </div>
+  
+  <div class="copy-success-message" *ngIf="copySuccess">
+    ✓ Texto copiado para área de transferência!
+  </div>
 
   <div class="messages-container">
     <div class="loading-chat" *ngIf="loading">
@@ -37,9 +41,19 @@
           <span class="message-author">
             {{ message.tipo_mensagem === 'Usuario' ? 'Você' : chat.nome_assistente }}
           </span>
-          <span class="message-time" *ngIf="message.data_mensagem">
-            {{ formatDate(message.data_mensagem) }}
-          </span>
+          <div class="message-header-actions">
+            <button 
+              *ngIf="message.tipo_mensagem === 'Assistente' && !message.nome_documento"
+              class="btn-copy"
+              (click)="copyToClipboard(message.mensagem)"
+              title="Copiar texto"
+            >
+              📋
+            </button>
+            <span class="message-time" *ngIf="message.data_mensagem">
+              {{ formatDate(message.data_mensagem) }}
+            </span>
+          </div>
         </div>
         <div class="message-document" *ngIf="message.nome_documento">
           <img src="pdf.png" alt="PDF" class="pdf-icon">
@@ -50,7 +64,7 @@
           Documento anexado com sucesso!
         </div>
         <div class="message-content" *ngIf="!message.nome_documento">
-          <div *ngIf="message.tipo_mensagem === 'Assistente'" [innerHTML]="message.mensagem | markdown"></div>
+          <div class="markdown-content" *ngIf="message.tipo_mensagem === 'Assistente'" [innerHTML]="message.mensagem | markdown"></div>
           <div *ngIf="message.tipo_mensagem === 'Usuario'">{{ message.mensagem }}</div>
         </div>
       </div>

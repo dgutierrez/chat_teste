@@ -67,6 +67,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   streamingSubscription?: Subscription;
   userScrolling = false;
   scrollTimeout?: any;
+  copySuccess = false;
+  copyTimeout?: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -88,30 +90,48 @@ export class ChatComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       const messagesContainer = document.querySelector('.messages-container');
       if (messagesContainer) {
-        messagesContainer.addEventListener('wheel', () => this.onUserScroll());
-        messagesContainer.addEventListener('touchmove', () => this.onUserScroll());
+        const scrollHandler = () => this.onUserScroll();
+        messagesContainer.addEventListener('wheel', scrollHandler, { passive: true });
+        messagesContainer.addEventListener('touchmove', scrollHandler, { passive: true });
+        messagesContainer.addEventListener('scroll', scrollHandler, { passive: true });
       }
     }, 500);
   }
   
   onUserScroll(): void {
+    // Marcar que usuário está rolando
     this.userScrolling = true;
     
-    // Resetar após 3 segundos sem interação
+    // NÃO resetar automaticamente - deixar usuário no controle total
+    // Só vai voltar a fazer auto-scroll quando streaming terminar
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
     }
-    
-    this.scrollTimeout = setTimeout(() => {
-      const messagesContainer = document.querySelector('.messages-container');
-      if (messagesContainer) {
-        const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
-        // Só reativar auto-scroll se estiver perto do final
-        if (isAtBottom) {
-          this.userScrolling = false;
-        }
+  }
+  
+  resetUserScroll(): void {
+    // Método chamado apenas quando streaming termina ou nova mensagem é enviada
+    this.userScrolling = false;
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copySuccess = true;
+      this.cdr.detectChanges();
+      
+      // Limpar timeout anterior se existir
+      if (this.copyTimeout) {
+        clearTimeout(this.copyTimeout);
       }
-    }, 3000);
+      
+      // Ocultar mensagem após 3 segundos
+      this.copyTimeout = setTimeout(() => {
+        this.copySuccess = false;
+        this.cdr.detectChanges();
+      }, 3000);
+    }).catch(err => {
+      console.error('Erro ao copiar texto:', err);
+    });
   }
 
   ngOnDestroy(): void {
@@ -120,6 +140,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
+    }
+    
+    if (this.copyTimeout) {
+      clearTimeout(this.copyTimeout);
     }
     
     const messagesContainer = document.querySelector('.messages-container');
@@ -357,7 +381,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           const displayText = fullText.substring(0, Math.min(currentIndex, fullText.length));
           this.chat!.mensagens[messageIndex].mensagem = displayText;
           this.cdr.detectChanges();
-          this.scrollToBottom();
+          // NÃO fazer scroll durante streaming - usuário tem controle total
         },
         complete: () => {
           // Garantir que o texto completo seja exibido
@@ -365,7 +389,10 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.isStreaming = false;
           this.streamingMessage = '';
           this.cdr.detectChanges();
-          this.scrollToBottom();
+          // Apenas fazer scroll no final se usuário não tiver rolado
+          if (!this.userScrolling) {
+            this.scrollToBottom();
+          }
         }
       });
   }
