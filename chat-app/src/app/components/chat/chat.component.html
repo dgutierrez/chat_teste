@@ -45,7 +45,11 @@
           <img src="pdf.png" alt="PDF" class="pdf-icon">
           <span class="document-name">{{ message.nome_documento }}</span>
         </div>
-        <div class="message-content" [innerHTML]="message.mensagem"></div>
+        <div class="document-status document-ready" *ngIf="message.nome_documento && message.isNewlyAttached">
+          <span class="check-icon">✓</span>
+          Documento anexado com sucesso!
+        </div>
+        <div class="message-content" *ngIf="!message.nome_documento" [innerHTML]="message.mensagem"></div>
       </div>
 
       <div class="message message-assistant processing" *ngIf="processingMessageId">
@@ -59,6 +63,28 @@
             <span></span>
           </div>
           Processando sua mensagem...
+        </div>
+      </div>
+      
+      <div class="message message-user" *ngIf="uploadingFileName">
+        <div class="message-header">
+          <span class="message-author">Você</span>
+        </div>
+        <div class="message-document">
+          <img src="pdf.png" alt="PDF" class="pdf-icon">
+          <span class="document-name">{{ uploadingFileName }}</span>
+        </div>
+        <div class="document-status" *ngIf="isIndexing">
+          <div class="indexing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          Indexando documento...
+        </div>
+        <div class="document-status document-ready" *ngIf="indexingComplete">
+          <span class="check-icon">✓</span>
+          Documento pronto!
         </div>
       </div>
     </div>
@@ -101,6 +127,7 @@
   </div>
   
   <div class="upload-progress" *ngIf="uploadProgress">
+    <div class="upload-spinner"></div>
     {{ uploadProgress }}
   </div>
 </div>

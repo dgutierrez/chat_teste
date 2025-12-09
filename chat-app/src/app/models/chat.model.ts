@@ -36,4 +36,5 @@ export interface Message {
   tipo_mensagem: 'Usuario' | 'Assistente';
   nome_documento: string;
   extensao_documento: string;
+  isNewlyAttached?: boolean;
 }

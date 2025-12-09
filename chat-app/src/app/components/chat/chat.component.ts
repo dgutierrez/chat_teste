@@ -35,6 +35,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   uploading = false;
   uploadProgress = '';
   rootDirectoryId: string | null = null;
+  uploadingFileName: string = '';
+  isIndexing = false;
+  indexingComplete = false;
   
   // Streaming effect
   streamingMessage: string = '';
@@ -415,6 +418,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.uploading = true;
     this.errorMessage = '';
     this.uploadProgress = 'Enviando arquivo...';
+    this.uploadingFileName = this.selectedFile.name;
+    this.isIndexing = false;
+    this.indexingComplete = false;
+    this.cdr.detectChanges();
 
     // Passo 1: Upload do arquivo para o diretório raiz
     this.directoryService.uploadDocument(this.rootDirectoryId, this.selectedFile)
@@ -426,12 +433,21 @@ export class ChatComponent implements OnInit, OnDestroy {
           if (this.fileInput) {
             this.fileInput.nativeElement.value = '';
           }
+          // Resetar estados após um delay
+          setTimeout(() => {
+            this.uploadingFileName = '';
+            this.isIndexing = false;
+            this.indexingComplete = false;
+            this.cdr.detectChanges();
+          }, 3000);
         })
       )
       .subscribe({
         next: (uploadResponse) => {
           console.log('Document uploaded:', uploadResponse);
           this.uploadProgress = 'Indexando documento...';
+          this.isIndexing = true;
+          this.cdr.detectChanges();
           
           // Passo 2: Aguardar indexação do documento
           this.waitForDocumentIndexing(uploadResponse.data.codigo_documento)
@@ -439,6 +455,9 @@ export class ChatComponent implements OnInit, OnDestroy {
               next: () => {
                 console.log('Document indexed successfully');
                 this.uploadProgress = 'Anexando ao chat...';
+                this.isIndexing = false;
+                this.indexingComplete = true;
+                this.cdr.detectChanges();
                 
                 // Passo 3: Anexar documento ao chat
                 this.directoryService.attachDocumentToChat(this.chatId, uploadResponse.data.codigo_documento)
@@ -454,7 +473,8 @@ export class ChatComponent implements OnInit, OnDestroy {
                         data_mensagem: attachResponse.data.data_mensagem,
                         tipo_mensagem: attachResponse.data.tipo_mensagem as 'Usuario' | 'Assistente',
                         nome_documento: attachResponse.data.nome_documento,
-                        extensao_documento: attachResponse.data.extensao_documento
+                        extensao_documento: attachResponse.data.extensao_documento,
+                        isNewlyAttached: true
                       };
 
                       if (this.chat) {
