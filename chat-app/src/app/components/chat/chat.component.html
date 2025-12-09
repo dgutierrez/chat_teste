@@ -42,7 +42,7 @@
           </span>
         </div>
         <div class="message-document" *ngIf="message.nome_documento">
-          <span class="document-icon">📄</span>
+          <img src="pdf.png" alt="PDF" class="pdf-icon">
           <span class="document-name">{{ message.nome_documento }}</span>
         </div>
         <div class="message-content" [innerHTML]="message.mensagem"></div>
