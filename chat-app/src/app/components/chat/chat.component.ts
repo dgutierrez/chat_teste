@@ -188,8 +188,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           );
         }),
         takeWhile((status) => {
-          // Continuar enquanto estiver processando (sem limite de tentativas)
-          const shouldContinue = status.status_processamento_mensagem === 'Processando';
+          // Continuar enquanto estiver processando ou pendente (sem limite de tentativas)
+          const shouldContinue = status.status_processamento_mensagem === 'Processando' || status.status_processamento_mensagem === 'Pendente';
           console.log(`Should continue polling: ${shouldContinue} (status: ${status.status_processamento_mensagem}, attempts: ${this.pollingAttempts})`);
           return shouldContinue;
         }, true) // true = emitir o último valor mesmo que a condição seja falsa

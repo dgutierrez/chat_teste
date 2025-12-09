@@ -12,5 +12,5 @@ export interface MessageProcessingStatus {
   codigo_processamento_mensagem: string;
   data_criacao: string;
   data_atualizacao: string;
-  status_processamento_mensagem: 'Processando' | 'Processado';
+  status_processamento_mensagem: 'Pendente' | 'Processando' | 'Processado';
 }
