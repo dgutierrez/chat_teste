@@ -35,6 +35,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   uploading = false;
   uploadProgress = '';
   rootDirectoryId: string | null = null;
+  
+  // Streaming effect
+  streamingMessage: string = '';
+  isStreaming = false;
+  streamingSubscription?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -55,6 +60,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+    this.stopStreaming();
   }
 
   loadChat(): void {
@@ -168,11 +174,11 @@ export class ChatComponent implements OnInit, OnDestroy {
           console.log('Polling status:', status);
           
           if (status.status_processamento_mensagem === 'Processado') {
-            console.log('Message processed successfully! Reloading chat...');
+            console.log('Message processed successfully! Loading with streaming effect...');
             this.processingMessageId = null;
             this.pollingAttempts = 0;
             this.stopPolling();
-            this.loadChat();
+            this.loadChatWithStreaming();
           }
           // Continua o polling automaticamente enquanto status for "Processando"
         },
@@ -225,6 +231,81 @@ export class ChatComponent implements OnInit, OnDestroy {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     }, 100);
+  }
+
+  loadChatWithStreaming(): void {
+    this.chatService.getChatById(this.chatId).subscribe({
+      next: (response) => {
+        const previousMessagesCount = this.chat?.mensagens.length || 0;
+        this.chat = response.data;
+        
+        // Verificar se há nova mensagem do assistente
+        if (this.chat.mensagens.length > previousMessagesCount) {
+          const lastMessage = this.chat.mensagens[this.chat.mensagens.length - 1];
+          
+          if (lastMessage.tipo_mensagem === 'Assistente') {
+            // Iniciar efeito de streaming para a última mensagem
+            this.startStreamingEffect(lastMessage);
+          } else {
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          }
+        } else {
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        }
+      },
+      error: (error) => {
+        console.error('Error loading chat:', error);
+        this.errorMessage = 'Erro ao carregar chat';
+      }
+    });
+  }
+
+  startStreamingEffect(message: Message): void {
+    const fullText = message.mensagem;
+    this.isStreaming = true;
+    this.streamingMessage = '';
+    
+    // Temporariamente substituir a mensagem completa por vazio
+    const messageIndex = this.chat!.mensagens.length - 1;
+    const originalMessage = this.chat!.mensagens[messageIndex].mensagem;
+    this.chat!.mensagens[messageIndex].mensagem = '';
+    
+    let currentIndex = 0;
+    const charsPerInterval = 3; // Quantos caracteres por vez
+    const intervalTime = 20; // Milissegundos entre cada atualização
+    
+    this.streamingSubscription = interval(intervalTime)
+      .pipe(
+        takeWhile(() => currentIndex < fullText.length)
+      )
+      .subscribe({
+        next: () => {
+          currentIndex += charsPerInterval;
+          const displayText = fullText.substring(0, Math.min(currentIndex, fullText.length));
+          this.chat!.mensagens[messageIndex].mensagem = displayText;
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        },
+        complete: () => {
+          // Garantir que o texto completo seja exibido
+          this.chat!.mensagens[messageIndex].mensagem = originalMessage;
+          this.isStreaming = false;
+          this.streamingMessage = '';
+          this.cdr.detectChanges();
+          this.scrollToBottom();
+        }
+      });
+  }
+
+  stopStreaming(): void {
+    if (this.streamingSubscription) {
+      this.streamingSubscription.unsubscribe();
+      this.streamingSubscription = undefined;
+    }
+    this.isStreaming = false;
+    this.streamingMessage = '';
   }
 
   // Upload de documentos
