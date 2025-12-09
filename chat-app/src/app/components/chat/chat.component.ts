@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild, Pipe, PipeTransform } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,11 +8,33 @@ import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
 import { DirectoryService } from '../../services/directory.service';
 import { ChatDetail, Message } from '../../models/chat.model';
+import { marked } from 'marked';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Pipe({
+  name: 'markdown',
+  standalone: true
+})
+export class MarkdownPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {
+    // Configurar marked para usar quebras de linha
+    marked.setOptions({
+      breaks: true,
+      gfm: true
+    });
+  }
+
+  transform(value: string): SafeHtml {
+    if (!value) return '';
+    const html = marked.parse(value);
+    return this.sanitizer.sanitize(1, html) || '';
+  }
+}
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownPipe],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css']
 })
