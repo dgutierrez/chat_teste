@@ -65,6 +65,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   streamingMessage: string = '';
   isStreaming = false;
   streamingSubscription?: Subscription;
+  userScrolling = false;
+  scrollTimeout?: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -81,11 +83,50 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.loadChat();
       this.loadRootDirectory();
     }
+    
+    // Detectar quando usuário interage com a rolagem
+    setTimeout(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.addEventListener('wheel', () => this.onUserScroll());
+        messagesContainer.addEventListener('touchmove', () => this.onUserScroll());
+      }
+    }, 500);
+  }
+  
+  onUserScroll(): void {
+    this.userScrolling = true;
+    
+    // Resetar após 3 segundos sem interação
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    
+    this.scrollTimeout = setTimeout(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+        // Só reativar auto-scroll se estiver perto do final
+        if (isAtBottom) {
+          this.userScrolling = false;
+        }
+      }
+    }, 3000);
   }
 
   ngOnDestroy(): void {
     this.stopPolling();
     this.stopStreaming();
+    
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer) {
+      messagesContainer.removeEventListener('wheel', () => this.onUserScroll());
+      messagesContainer.removeEventListener('touchmove', () => this.onUserScroll());
+    }
   }
 
   loadChat(): void {
@@ -250,6 +291,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
+    // Só fazer scroll automático se o usuário não estiver rolando
+    if (this.userScrolling) {
+      return;
+    }
+    
     setTimeout(() => {
       const messagesContainer = document.querySelector('.messages-container');
       if (messagesContainer) {
