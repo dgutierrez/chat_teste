@@ -6,9 +6,17 @@ export interface Directory {
   caminho_diretorio: string;
   criado_em: string;
   sub_diretorios: Directory[];
-  documentos: any[];
+  documentos: Document[];
   analises: any[];
   base_conhecimento: string;
+}
+
+export interface Document {
+  codigo_documento: string;
+  nome_documento: string;
+  caminho_documento: string;
+  status_documento: string;
+  criado_em: string;
 }
 
 export interface DirectoryResponse {

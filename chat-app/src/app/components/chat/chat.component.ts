@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { interval, Subscription, of } from 'rxjs';
+import { interval, Subscription, of, Observable } from 'rxjs';
 import { switchMap, takeWhile, retry, catchError, take, finalize } from 'rxjs/operators';
 import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
@@ -308,6 +308,58 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.streamingMessage = '';
   }
 
+  waitForDocumentIndexing(documentId: string): Observable<void> {
+    return new Observable<void>(observer => {
+      console.log('Starting document indexing polling...');
+      
+      const checkIndexing = () => {
+        this.directoryService.getDirectories().subscribe({
+          next: (response) => {
+            // Procurar o documento em todos os diretórios
+            const findDocument = (dir: any): any => {
+              // Verificar documentos no diretório atual
+              const doc = dir.documentos?.find((d: any) => d.codigo_documento === documentId);
+              if (doc) return doc;
+              
+              // Verificar subdiretórios recursivamente
+              for (const subDir of dir.sub_diretorios || []) {
+                const found = findDocument(subDir);
+                if (found) return found;
+              }
+              return null;
+            };
+            
+            const document = findDocument(response.data);
+            
+            if (document) {
+              console.log('Document status:', document.status_documento);
+              
+              if (document.status_documento === 'Finalizado') {
+                console.log('Document indexed!');
+                observer.next();
+                observer.complete();
+              } else {
+                // Continuar verificando a cada 2 segundos
+                setTimeout(checkIndexing, 2000);
+              }
+            } else {
+              // Documento não encontrado ainda, continuar verificando
+              setTimeout(checkIndexing, 2000);
+            }
+          },
+          error: (err) => {
+            console.error('Error checking document status:', err);
+            // Continuar tentando mesmo com erro
+            setTimeout(checkIndexing, 2000);
+          }
+        });
+      };
+      
+      // Iniciar verificação
+      checkIndexing();
+    });
+  }
+
   // Upload de documentos
   loadRootDirectory(): void {
     this.directoryService.getDirectories().subscribe({
@@ -379,38 +431,48 @@ export class ChatComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (uploadResponse) => {
           console.log('Document uploaded:', uploadResponse);
-          this.uploadProgress = 'Anexando ao chat...';
+          this.uploadProgress = 'Indexando documento...';
           
-          // Passo 2: Anexar documento ao chat
-          this.directoryService.attachDocumentToChat(this.chatId, uploadResponse.data.codigo_documento)
+          // Passo 2: Aguardar indexação do documento
+          this.waitForDocumentIndexing(uploadResponse.data.codigo_documento)
             .subscribe({
-              next: (attachResponse) => {
-                console.log('Document attached to chat:', attachResponse);
-                this.uploadProgress = '';
+              next: () => {
+                console.log('Document indexed successfully');
+                this.uploadProgress = 'Anexando ao chat...';
                 
-                // Adicionar mensagem à lista de mensagens
-                const documentMessage: Message = {
-                  codigo_mensagem: attachResponse.data.codigo_mensagem,
-                  mensagem: attachResponse.data.mensagem,
-                  data_mensagem: attachResponse.data.data_mensagem,
-                  tipo_mensagem: attachResponse.data.tipo_mensagem as 'Usuario' | 'Assistente',
-                  nome_documento: attachResponse.data.nome_documento,
-                  extensao_documento: attachResponse.data.extensao_documento
-                };
+                // Passo 3: Anexar documento ao chat
+                this.directoryService.attachDocumentToChat(this.chatId, uploadResponse.data.codigo_documento)
+                  .subscribe({
+                    next: (attachResponse) => {
+                      console.log('Document attached to chat:', attachResponse);
+                      this.uploadProgress = '';
+                      
+                      // Adicionar mensagem à lista de mensagens
+                      const documentMessage: Message = {
+                        codigo_mensagem: attachResponse.data.codigo_mensagem,
+                        mensagem: attachResponse.data.mensagem,
+                        data_mensagem: attachResponse.data.data_mensagem,
+                        tipo_mensagem: attachResponse.data.tipo_mensagem as 'Usuario' | 'Assistente',
+                        nome_documento: attachResponse.data.nome_documento,
+                        extensao_documento: attachResponse.data.extensao_documento
+                      };
 
-                if (this.chat) {
-                  this.chat.mensagens.push(documentMessage);
-                  this.cdr.detectChanges();
-                  this.scrollToBottom();
-                }
-
-                // NÃO iniciar polling aqui - aguardar usuário enviar mensagem
-                // this.processingMessageId = attachResponse.data.codigo_mensagem;
-                // this.startPolling();
+                      if (this.chat) {
+                        this.chat.mensagens.push(documentMessage);
+                        this.cdr.detectChanges();
+                        this.scrollToBottom();
+                      }
+                    },
+                    error: (error) => {
+                      console.error('Error attaching document:', error);
+                      this.errorMessage = 'Erro ao anexar documento ao chat';
+                      this.uploadProgress = '';
+                    }
+                  });
               },
               error: (error) => {
-                console.error('Error attaching document:', error);
-                this.errorMessage = 'Erro ao anexar documento ao chat';
+                console.error('Error waiting for indexing:', error);
+                this.errorMessage = 'Erro ao indexar documento';
                 this.uploadProgress = '';
               }
             });
