@@ -1,4 +1,181 @@
 <div class="directory-container">
-  <h1>Diretórios</h1>
-  <p>Em breve: Funcionalidade de Diretórios será implementada aqui.</p>
+  <div class="header-wrapper">
+    <header class="header">
+      <h1>Diretórios</h1>
+      <div class="header-actions">
+        <button class="btn-action" (click)="openCreateDirectoryDialog()">
+          📁 Novo Diretório
+        </button>
+        <button class="btn-action" (click)="openUploadDialog()">
+          📄 Upload PDF
+        </button>
+      </div>
+    </header>
+  </div>
+
+  <div class="content">
+    <!-- Caminho do diretório -->
+    <div class="path-container" *ngIf="currentDirectory">
+      <button 
+        class="btn-back" 
+        (click)="goBack()" 
+        [disabled]="isRootDirectory()"
+        title="Voltar para pasta anterior"
+      >
+        ← Voltar
+      </button>
+      <label for="currentPath">Caminho:</label>
+      <input 
+        type="text" 
+        id="currentPath"
+        [value]="currentDirectory.caminho_diretorio" 
+        readonly
+        class="path-input"
+      />
+    </div>
+
+    <!-- Mensagens -->
+    <div class="success-message" *ngIf="successMessage">
+      ✓ {{ successMessage }}
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" *ngIf="loading">
+      Carregando...
+    </div>
+
+    <!-- Grid de itens -->
+    <div class="items-grid" *ngIf="!loading && currentDirectory">
+      <!-- Sub-diretórios -->
+      <div 
+        class="item-card directory-card" 
+        *ngFor="let directory of currentDirectory.sub_diretorios"
+      >
+        <div class="card-content" (click)="loadDirectory(directory.codigo_diretorio)">
+          <img src="diretorio.jpg" alt="Diretório" class="item-icon" />
+          <h3>{{ directory.nome_diretorio }}</h3>
+          <p class="item-date">{{ formatDate(directory.criado_em) }}</p>
+        </div>
+        <div class="card-actions">
+          <button 
+            class="btn-delete" 
+            (click)="confirmDeleteDirectory(directory)"
+            title="Excluir diretório"
+          >
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
+
+      <!-- Documentos -->
+      <div 
+        class="item-card document-card" 
+        *ngFor="let document of currentDirectory.documentos"
+      >
+        <div class="card-content">
+          <img src="pdf.png" alt="PDF" class="item-icon" />
+          <h3>{{ document.nome_documento }}</h3>
+          <p class="item-status" [class.status-finalizado]="document.status_documento === 'Finalizado'">
+            {{ document.status_documento }}
+          </p>
+          <p class="item-date">{{ formatDate(document.criado_em) }}</p>
+        </div>
+        <div class="card-actions">
+          <button 
+            class="btn-delete" 
+            (click)="confirmDeleteDocument(document)"
+            title="Excluir documento"
+          >
+            🗑️ Excluir
+          </button>
+        </div>
+      </div>
+
+      <!-- Estado vazio -->
+      <div class="empty-state" *ngIf="currentDirectory.sub_diretorios.length === 0 && currentDirectory.documentos.length === 0">
+        <p>📂 Este diretório está vazio</p>
+        <p class="empty-hint">Crie um novo diretório ou faça upload de um documento PDF</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Criar Diretório -->
+<div class="modal-overlay" *ngIf="showCreateDirectoryDialog" (click)="closeCreateDirectoryDialog()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2>Novo Diretório</h2>
+    <div class="form-group">
+      <label for="directoryName">Nome do Diretório</label>
+      <input
+        type="text"
+        id="directoryName"
+        [(ngModel)]="newDirectoryName"
+        placeholder="Digite o nome do diretório"
+        [disabled]="creatingDirectory"
+        (keyup.enter)="createDirectory()"
+      />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeCreateDirectoryDialog()" [disabled]="creatingDirectory">
+        Cancelar
+      </button>
+      <button class="btn-confirm" (click)="createDirectory()" [disabled]="creatingDirectory || !newDirectoryName.trim()">
+        {{ creatingDirectory ? 'Criando...' : 'Criar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Upload de Documento -->
+<div class="modal-overlay" *ngIf="showUploadDialog" (click)="closeUploadDialog()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2>Upload de Documento</h2>
+    <div class="form-group">
+      <label for="fileInput">Selecione um arquivo PDF (máx. 10MB)</label>
+      <input
+        type="file"
+        id="fileInput"
+        accept="application/pdf"
+        (change)="onFileSelected($event)"
+        [disabled]="uploading"
+      />
+      <p class="file-info" *ngIf="selectedFile">
+        📄 {{ selectedFile.name }} ({{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB)
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeUploadDialog()" [disabled]="uploading">
+        Cancelar
+      </button>
+      <button class="btn-confirm" (click)="uploadDocument()" [disabled]="uploading || !selectedFile">
+        {{ uploading ? 'Enviando...' : 'Upload' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar Exclusão -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+  <div class="modal modal-danger" (click)="$event.stopPropagation()">
+    <h2>Confirmar Exclusão</h2>
+    <p *ngIf="itemToDelete">
+      Tem certeza que deseja excluir {{ itemToDelete.type === 'directory' ? 'o diretório' : 'o documento' }}
+      <strong>{{ itemToDelete.name }}</strong>?
+    </p>
+    <p class="warning-text" *ngIf="itemToDelete?.type === 'directory'">
+      ⚠️ Atenção: Esta ação irá excluir todos os itens dentro deste diretório!
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="closeDeleteConfirm()" [disabled]="deleting">
+        Cancelar
+      </button>
+      <button class="btn-danger" (click)="executeDelete()" [disabled]="deleting">
+        {{ deleting ? 'Excluindo...' : 'Excluir' }}
+      </button>
+    </div>
+  </div>
 </div>
