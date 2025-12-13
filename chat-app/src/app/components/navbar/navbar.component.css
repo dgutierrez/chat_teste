@@ -1,0 +1,218 @@
+.navbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.navbar-brand {
+  flex: 1;
+  text-align: center;
+}
+
+.navbar-brand h1 {
+  color: white;
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+/* Botão hambúrguer - sempre visível */
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 1001;
+  transition: all 0.3s ease;
+  border-radius: 5px;
+}
+
+.hamburger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(8px, 8px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Menu lateral */
+.sidebar-menu {
+  position: fixed;
+  top: 0;
+  left: -320px;
+  width: 320px;
+  height: 100vh;
+  background: white;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
+  transition: left 0.3s ease;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-menu.active {
+  left: 0;
+}
+
+.menu-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.menu-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 2.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-items {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.menu-items a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 1rem;
+  border-left: 4px solid transparent;
+  cursor: pointer;
+}
+
+.menu-items a:hover {
+  background-color: #f5f5f5;
+  border-left-color: #667eea;
+}
+
+.menu-items a.active {
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+  border-left-color: #667eea;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.icon {
+  font-size: 1.5rem;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Botão de logout */
+.btn-logout {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.btn-logout:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: white;
+  transform: translateY(-2px);
+}
+
+
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 1rem 1.5rem;
+  }
+
+  .navbar-brand h1 {
+    font-size: 1.5rem;
+  }
+
+  .btn-logout {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .sidebar-menu {
+    width: 280px;
+    left: -280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-brand h1 {
+    font-size: 1.25rem;
+  }
+
+  .btn-logout {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}

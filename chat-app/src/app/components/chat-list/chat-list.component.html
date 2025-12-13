@@ -1,15 +1,14 @@
 <div class="chat-list-container">
-  <header class="header">
-    <h1>Meus Chats</h1>
-    <div class="header-actions">
-      <button class="btn-create" (click)="openCreateDialog()">
-        + Novo Chat
-      </button>
-      <button class="btn-logout" (click)="logout()">
-        Sair
-      </button>
-    </div>
-  </header>
+  <div class="header-wrapper">
+    <header class="header">
+      <h1>Meus Chats</h1>
+      <div class="header-actions">
+        <button class="btn-create" (click)="openCreateDialog()">
+          + Novo Chat
+        </button>
+      </div>
+    </header>
+  </div>
 
   <div class="content">
     <div class="error-message" *ngIf="errorMessage">
