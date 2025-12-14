@@ -1,1 +1,1 @@
-export const API_URL = 'https://lawrana.com';
+export const API_URL = 'https://localhost:7098';

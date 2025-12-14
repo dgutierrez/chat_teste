@@ -203,8 +203,14 @@ export class DirectoryComponent implements OnInit {
           this.reloadCurrentDirectory();
         },
         error: (error) => {
-          this.errorMessage.set('Erro ao excluir diretório');
           this.deleting = false;
+          this.closeDeleteConfirm();
+          
+          if (error.status === 422 && error.error?.erros?.length > 0) {
+            this.errorMessage.set(error.error.erros[0]);
+          } else {
+            this.errorMessage.set('Erro ao excluir diretório');
+          }
           console.error('Error deleting directory:', error);
         }
       });
@@ -217,12 +223,14 @@ export class DirectoryComponent implements OnInit {
           this.reloadCurrentDirectory();
         },
         error: (error) => {
-          if (error.status === 422) {
-            this.errorMessage.set('O documento está associado a uma base de conhecimento.');
+          this.deleting = false;
+          this.closeDeleteConfirm();
+          
+          if (error.status === 422 && error.error?.erros?.length > 0) {
+            this.errorMessage.set(error.error.erros[0]);
           } else {
             this.errorMessage.set('Erro ao excluir documento');
           }
-          this.deleting = false;
           console.error('Error deleting document:', error);
         }
       });
