@@ -7,7 +7,9 @@ import { switchMap, takeWhile, retry, catchError, take, finalize } from 'rxjs/op
 import { ChatService } from '../../services/chat.service';
 import { MessageService } from '../../services/message.service';
 import { DirectoryService } from '../../services/directory.service';
+import { KnowledgeBaseService } from '../../services/knowledge-base.service';
 import { ChatDetail, Message } from '../../models/chat.model';
+import { BaseConhecimento } from '../../models/knowledge-base.model';
 import { marked } from 'marked';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -70,12 +72,19 @@ export class ChatComponent implements OnInit, OnDestroy {
   copySuccess = false;
   copyTimeout?: any;
 
+  // Knowledge Base
+  showKnowledgeBasePicker = false;
+  knowledgeBases: BaseConhecimento[] = [];
+  loadingKnowledgeBases = false;
+  updatingKnowledgeBase = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private chatService: ChatService,
     private messageService: MessageService,
     private directoryService: DirectoryService,
+    private knowledgeBaseService: KnowledgeBaseService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -312,6 +321,13 @@ export class ChatComponent implements OnInit, OnDestroy {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  formatSize(sizeInMB: number): string {
+    if (sizeInMB < 1) {
+      return `${(sizeInMB * 1024).toFixed(2)} KB`;
+    }
+    return `${sizeInMB.toFixed(2)} MB`;
   }
 
   private scrollToBottom(): void {
@@ -598,5 +614,83 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.uploadProgress = '';
         }
       });
+  }
+
+  // Knowledge Base Methods
+  openKnowledgeBasePicker(): void {
+    this.showKnowledgeBasePicker = true;
+    this.loadKnowledgeBases();
+  }
+
+  closeKnowledgeBasePicker(): void {
+    this.showKnowledgeBasePicker = false;
+  }
+
+  loadKnowledgeBases(): void {
+    this.loadingKnowledgeBases = true;
+    this.knowledgeBaseService.getKnowledgeBases().subscribe({
+      next: (bases) => {
+        this.knowledgeBases = bases;
+        this.loadingKnowledgeBases = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar bases de conhecimento:', error);
+        this.errorMessage = 'Erro ao carregar bases de conhecimento';
+        this.loadingKnowledgeBases = false;
+      }
+    });
+  }
+
+  selectKnowledgeBase(knowledgeBase: BaseConhecimento): void {
+    if (this.updatingKnowledgeBase) return;
+
+    this.updatingKnowledgeBase = true;
+    this.errorMessage = '';
+
+    this.chatService.updateChatKnowledgeBase(this.chatId, {
+      codigo_base_conhecimento: knowledgeBase.codigo_base_conhecimento
+    }).subscribe({
+      next: (response) => {
+        if (this.chat) {
+          this.chat.codigo_base_conhecimento = response.data.codigo_base_conhecimento;
+          this.chat.nome_base_conhecimento = response.data.nome_base_conhecimento;
+        }
+        this.updatingKnowledgeBase = false;
+        this.closeKnowledgeBasePicker();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao atualizar base de conhecimento:', error);
+        this.errorMessage = 'Erro ao vincular base de conhecimento';
+        this.updatingKnowledgeBase = false;
+      }
+    });
+  }
+
+  removeKnowledgeBase(): void {
+    if (!this.chat?.codigo_base_conhecimento || this.updatingKnowledgeBase) return;
+
+    this.updatingKnowledgeBase = true;
+    this.errorMessage = '';
+
+    // Para remover, envia string vazia
+    this.chatService.updateChatKnowledgeBase(this.chatId, {
+      codigo_base_conhecimento: ''
+    }).subscribe({
+      next: (response) => {
+        if (this.chat) {
+          this.chat.codigo_base_conhecimento = null;
+          this.chat.nome_base_conhecimento = null;
+        }
+        this.updatingKnowledgeBase = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao remover base de conhecimento:', error);
+        this.errorMessage = 'Erro ao desvincular base de conhecimento';
+        this.updatingKnowledgeBase = false;
+      }
+    });
   }
 }

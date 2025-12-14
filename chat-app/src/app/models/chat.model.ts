@@ -18,6 +18,8 @@ export interface CreateChatRequest {
 export interface ChatDetail {
   foto_assistente: string;
   nome_assistente: string;
+  codigo_base_conhecimento: string | null;
+  nome_base_conhecimento: string | null;
   mensagens: Message[];
   codigo_chat: string;
   codigo_assistente: string;
@@ -37,4 +39,8 @@ export interface Message {
   nome_documento: string;
   extensao_documento: string;
   isNewlyAttached?: boolean;
+}
+
+export interface UpdateChatKnowledgeBaseRequest {
+  codigo_base_conhecimento: string;
 }

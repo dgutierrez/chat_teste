@@ -13,6 +13,18 @@
       <div class="chat-details">
         <h2>{{ chat.nome_chat }}</h2>
         <p class="assistant-name">{{ chat.nome_assistente }}</p>
+        
+        <!-- Knowledge Base Info -->
+        <div class="knowledge-base-info" *ngIf="chat.nome_base_conhecimento">
+          <span class="kb-icon">📚</span>
+          <span class="kb-name">{{ chat.nome_base_conhecimento }}</span>
+          <button class="btn-remove-kb" (click)="removeKnowledgeBase()" title="Remover base de conhecimento">
+            ×
+          </button>
+        </div>
+        <button class="btn-select-kb" *ngIf="!chat.nome_base_conhecimento" (click)="openKnowledgeBasePicker()">
+          📚 Selecionar Base de Conhecimento
+        </button>
       </div>
     </div>
   </header>
@@ -149,6 +161,52 @@
   </div>
 </div>
 
+<!-- Modal de Seleção de Base de Conhecimento -->
+<div class="modal-overlay" *ngIf="showKnowledgeBasePicker" (click)="closeKnowledgeBasePicker()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Selecionar Base de Conhecimento</h2>
+      <button class="close-btn" (click)="closeKnowledgeBasePicker()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="loading" *ngIf="loadingKnowledgeBases">
+        <div class="spinner"></div>
+        <p>Carregando bases de conhecimento...</p>
+      </div>
+
+      <div class="kb-list" *ngIf="!loadingKnowledgeBases">
+        <div 
+          class="kb-item" 
+          *ngFor="let kb of knowledgeBases"
+          (click)="selectKnowledgeBase(kb)"
+          [class.disabled]="updatingKnowledgeBase"
+        >
+          <div class="kb-item-header">
+            <span class="kb-icon">📚</span>
+            <h3>{{ kb.nome_base_conhecimento }}</h3>
+          </div>
+          <p class="kb-description" *ngIf="kb.descricao_base_conhecimento">
+            {{ kb.descricao_base_conhecimento }}
+          </p>
+          <div class="kb-info">
+            <span>{{ kb.documentos?.length || 0 }} documentos</span>
+            <span>{{ formatSize(kb.tamanho_base_conhecimento) }}</span>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="knowledgeBases.length === 0">
+          <p>Nenhuma base de conhecimento disponível.</p>
+          <p class="empty-hint">Crie uma base de conhecimento primeiro.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeKnowledgeBasePicker()">Cancelar</button>
+    </div>
+  </div>
+</div>
 <div class="loading-page" *ngIf="!chat && loading">
   Carregando chat...
 </div>

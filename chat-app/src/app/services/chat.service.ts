@@ -6,7 +6,8 @@ import {
   ChatListResponse, 
   CreateChatRequest, 
   ChatDetail,
-  ChatDetailResponse 
+  ChatDetailResponse,
+  UpdateChatKnowledgeBaseRequest
 } from '../models/chat.model';
 import { API_URL } from '../config/api.config';
 
@@ -27,5 +28,9 @@ export class ChatService {
 
   getChatById(chatId: string): Observable<ChatDetailResponse> {
     return this.http.get<ChatDetailResponse>(`${API_URL}/chat/${chatId}`);
+  }
+
+  updateChatKnowledgeBase(chatId: string, request: UpdateChatKnowledgeBaseRequest): Observable<ChatDetailResponse> {
+    return this.http.put<ChatDetailResponse>(`${API_URL}/chat/${chatId}`, request);
   }
 }
