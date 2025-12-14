@@ -1,20 +1,24 @@
 <div class="chat-container" *ngIf="chat">
-  <header class="chat-header">
-    <button class="btn-back" (click)="goBack()">
-      ← Voltar
-    </button>
-    <div class="chat-info">
-      <div class="assistant-avatar" *ngIf="chat.foto_assistente">
-        <img [src]="chat.foto_assistente" [alt]="chat.nome_assistente" />
+  <div class="header-wrapper">
+    <header class="header">
+      <div class="header-left">
+        <button class="btn-back" (click)="goBack()">
+          ← Voltar
+        </button>
+        <div class="chat-info">
+          <div class="assistant-avatar" *ngIf="chat.foto_assistente">
+            <img [src]="chat.foto_assistente" [alt]="chat.nome_assistente" />
+          </div>
+          <div class="assistant-avatar-placeholder" *ngIf="!chat.foto_assistente">
+            {{ chat.nome_assistente.charAt(0) }}
+          </div>
+          <div class="chat-details">
+            <h1>{{ chat.nome_chat }}</h1>
+            <p class="assistant-name">{{ chat.nome_assistente }}</p>
+          </div>
+        </div>
       </div>
-      <div class="assistant-avatar-placeholder" *ngIf="!chat.foto_assistente">
-        {{ chat.nome_assistente.charAt(0) }}
-      </div>
-      <div class="chat-details">
-        <h2>{{ chat.nome_chat }}</h2>
-        <p class="assistant-name">{{ chat.nome_assistente }}</p>
-        
-        <!-- Knowledge Base Info -->
+      <div class="header-actions">
         <div class="knowledge-base-info" *ngIf="chat.nome_base_conhecimento">
           <span class="kb-icon">📚</span>
           <span class="kb-name">{{ chat.nome_base_conhecimento }}</span>
@@ -26,18 +30,19 @@
           📚 Selecionar Base de Conhecimento
         </button>
       </div>
+    </header>
+  </div>
+
+  <div class="content">
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
     </div>
-  </header>
+    
+    <div class="copy-success-message" *ngIf="copySuccess">
+      ✓ Texto copiado para área de transferência!
+    </div>
 
-  <div class="error-message" *ngIf="errorMessage">
-    {{ errorMessage }}
-  </div>
-  
-  <div class="copy-success-message" *ngIf="copySuccess">
-    ✓ Texto copiado para área de transferência!
-  </div>
-
-  <div class="messages-container">
+    <div class="messages-container">
     <div class="loading-chat" *ngIf="loading">
       Carregando mensagens...
     </div>
@@ -158,6 +163,7 @@
   <div class="upload-progress" *ngIf="uploadProgress">
     <div class="upload-spinner"></div>
     {{ uploadProgress }}
+  </div>
   </div>
 </div>
 
