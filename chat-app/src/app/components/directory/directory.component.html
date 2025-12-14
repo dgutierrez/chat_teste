@@ -15,7 +15,7 @@
 
   <div class="content">
     <!-- Caminho do diretório -->
-    <div class="path-container" *ngIf="currentDirectory">
+    <div class="path-container" *ngIf="currentDirectory()">
       <button 
         class="btn-back" 
         (click)="goBack()" 
@@ -28,35 +28,35 @@
       <input 
         type="text" 
         id="currentPath"
-        [value]="currentDirectory.caminho_diretorio" 
+        [value]="currentDirectory()!.caminho_diretorio" 
         readonly
         class="path-input"
       />
     </div>
 
     <!-- Mensagens -->
-    <div class="success-message" *ngIf="successMessage">
-      ✓ {{ successMessage }}
+    <div class="success-message" *ngIf="successMessage()">
+      ✓ {{ successMessage() }}
     </div>
 
-    <div class="error-message" *ngIf="errorMessage">
-      {{ errorMessage }}
+    <div class="error-message" *ngIf="errorMessage()">
+      {{ errorMessage() }}
     </div>
 
     <!-- Loading -->
-    <div class="loading" *ngIf="loading">
+    <div class="loading" *ngIf="loading()">
       Carregando...
     </div>
 
     <!-- Grid de itens -->
-    <div class="items-grid" *ngIf="!loading && currentDirectory">
+    <div class="items-grid" *ngIf="!loading() && currentDirectory()">
       <!-- Sub-diretórios -->
       <div 
         class="item-card directory-card" 
-        *ngFor="let directory of currentDirectory.sub_diretorios"
+        *ngFor="let directory of currentDirectory()!.sub_diretorios"
       >
         <div class="card-content" (click)="loadDirectory(directory.codigo_diretorio)">
-          <img src="diretorio.jpg" alt="Diretório" class="item-icon" />
+          <img src="diretorio.png" alt="Diretório" class="item-icon" />
           <h3>{{ directory.nome_diretorio }}</h3>
           <p class="item-date">{{ formatDate(directory.criado_em) }}</p>
         </div>
@@ -74,7 +74,7 @@
       <!-- Documentos -->
       <div 
         class="item-card document-card" 
-        *ngFor="let document of currentDirectory.documentos"
+        *ngFor="let document of currentDirectory()!.documentos"
       >
         <div class="card-content">
           <img src="pdf.png" alt="PDF" class="item-icon" />
@@ -96,7 +96,7 @@
       </div>
 
       <!-- Estado vazio -->
-      <div class="empty-state" *ngIf="currentDirectory.sub_diretorios.length === 0 && currentDirectory.documentos.length === 0">
+      <div class="empty-state" *ngIf="currentDirectory()!.sub_diretorios.length === 0 && currentDirectory()!.documentos.length === 0">
         <p>📂 Este diretório está vazio</p>
         <p class="empty-hint">Crie um novo diretório ou faça upload de um documento PDF</p>
       </div>

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { DirectoryResponse, DocumentUploadResponse, AttachDocumentRequest, AttachDocumentResponse, CreateDirectoryRequest } from '../models/directory.model';
 import { API_URL } from '../config/api.config';
 
@@ -12,12 +13,16 @@ export class DirectoryService {
 
   // Lista o diretório raiz
   getDirectories(): Observable<DirectoryResponse> {
-    return this.http.get<DirectoryResponse>(`${API_URL}/diretorio`);
+    return this.http.get<DirectoryResponse>(`${API_URL}/diretorio`).pipe(
+      tap(() => console.log('getDirectories response received'))
+    );
   }
 
   // Busca um diretório específico por ID
   getDirectoryById(directoryId: string): Observable<DirectoryResponse> {
-    return this.http.get<DirectoryResponse>(`${API_URL}/diretorio/${directoryId}`);
+    return this.http.get<DirectoryResponse>(`${API_URL}/diretorio/${directoryId}`).pipe(
+      tap(() => console.log('getDirectoryById response received'))
+    );
   }
 
   // Cria um novo diretório

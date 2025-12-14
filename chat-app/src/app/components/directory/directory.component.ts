@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DirectoryService } from '../../services/directory.service';
@@ -12,10 +12,10 @@ import { Directory, Documento } from '../../models/directory.model';
   styleUrls: ['./directory.component.css']
 })
 export class DirectoryComponent implements OnInit {
-  currentDirectory: Directory | null = null;
-  loading = false;
-  errorMessage = '';
-  successMessage = '';
+  currentDirectory = signal<Directory | null>(null);
+  loading = signal(false);
+  errorMessage = signal('');
+  successMessage = signal('');
   
   // Modais
   showCreateDirectoryDialog = false;
@@ -32,56 +32,49 @@ export class DirectoryComponent implements OnInit {
   itemToDelete: { type: 'directory' | 'document', id: string, name: string } | null = null;
   deleting = false;
 
-  constructor(
-    private directoryService: DirectoryService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private directoryService: DirectoryService) {}
 
   ngOnInit(): void {
     this.loadRootDirectory();
   }
 
   loadRootDirectory(): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.cdr.detectChanges();
+    this.loading.set(true);
+    this.errorMessage.set('');
     
-    console.log('Loading root directory');
+    console.log('Loading root directory - loading:', this.loading());
     
     this.directoryService.getDirectories().subscribe({
       next: (response) => {
         console.log('Root directory loaded:', response.data);
-        this.currentDirectory = response.data;
-        this.loading = false;
-        this.cdr.detectChanges();
+        this.currentDirectory.set(response.data);
+        this.loading.set(false);
+        console.log('State updated - loading:', this.loading());
       },
       error: (error) => {
-        this.errorMessage = 'Erro ao carregar diretórios';
-        this.loading = false;
-        this.cdr.detectChanges();
+        this.errorMessage.set('Erro ao carregar diretórios');
+        this.loading.set(false);
         console.error('Error loading directories:', error);
       }
     });
   }
 
   loadDirectory(directoryId: string): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.cdr.detectChanges();
+    this.loading.set(true);
+    this.errorMessage.set('');
     
-    console.log('Loading directory:', directoryId);
+    console.log('Loading directory:', directoryId, '- loading:', this.loading());
     
     this.directoryService.getDirectoryById(directoryId).subscribe({
       next: (response) => {
         console.log('Directory loaded:', response.data);
-        this.currentDirectory = response.data;
-        this.loading = false;
-        this.cdr.detectChanges();
+        this.currentDirectory.set(response.data);
+        this.loading.set(false);
+        console.log('State updated - loading:', this.loading());
       },
       error: (error) => {
-        this.errorMessage = 'Erro ao carregar diretório';
-        this.loading = false;
-        this.cdr.detectChanges();
+        this.errorMessage.set('Erro ao carregar diretório');
+        this.loading.set(false);
         console.error('Error loading directory:', error);
       }
     });
@@ -101,12 +94,12 @@ export class DirectoryComponent implements OnInit {
     if (!this.newDirectoryName.trim()) return;
     
     this.creatingDirectory = true;
-    this.errorMessage = '';
+    this.errorMessage.set('');
     
     const request = {
       nome_pasta: this.newDirectoryName.trim(),
-      codigo_pasta_pai: this.currentDirectory?.codigo_diretorio !== this.currentDirectory?.codigo_proprietario 
-        ? this.currentDirectory?.codigo_diretorio 
+      codigo_pasta_pai: this.currentDirectory()?.codigo_diretorio !== this.currentDirectory()?.codigo_proprietario 
+        ? this.currentDirectory()?.codigo_diretorio 
         : undefined
     };
     
@@ -118,7 +111,7 @@ export class DirectoryComponent implements OnInit {
         this.reloadCurrentDirectory();
       },
       error: (error) => {
-        this.errorMessage = 'Erro ao criar diretório';
+        this.errorMessage.set('Erro ao criar diretório');
         this.creatingDirectory = false;
         console.error('Error creating directory:', error);
       }
@@ -140,24 +133,24 @@ export class DirectoryComponent implements OnInit {
     if (file && file.type === 'application/pdf') {
       if (file.size <= 10 * 1024 * 1024) {
         this.selectedFile = file;
-        this.errorMessage = '';
+        this.errorMessage.set('');
       } else {
-        this.errorMessage = 'O arquivo deve ter no máximo 10MB';
+        this.errorMessage.set('O arquivo deve ter no máximo 10MB');
         this.selectedFile = null;
       }
     } else {
-      this.errorMessage = 'Apenas arquivos PDF são permitidos';
+      this.errorMessage.set('Apenas arquivos PDF são permitidos');
       this.selectedFile = null;
     }
   }
 
   uploadDocument(): void {
-    if (!this.selectedFile || !this.currentDirectory) return;
+    if (!this.selectedFile || !this.currentDirectory()) return;
     
     this.uploading = true;
-    this.errorMessage = '';
+    this.errorMessage.set('');
     
-    this.directoryService.uploadDocument(this.currentDirectory.codigo_diretorio, this.selectedFile).subscribe({
+    this.directoryService.uploadDocument(this.currentDirectory()!.codigo_diretorio, this.selectedFile).subscribe({
       next: () => {
         this.uploading = false;
         this.closeUploadDialog();
@@ -165,7 +158,7 @@ export class DirectoryComponent implements OnInit {
         this.reloadCurrentDirectory();
       },
       error: (error) => {
-        this.errorMessage = 'Erro ao enviar documento';
+        this.errorMessage.set('Erro ao enviar documento');
         this.uploading = false;
         console.error('Error uploading document:', error);
       }
@@ -196,10 +189,10 @@ export class DirectoryComponent implements OnInit {
   }
 
   executeDelete(): void {
-    if (!this.itemToDelete || !this.currentDirectory) return;
+    if (!this.itemToDelete || !this.currentDirectory()) return;
     
     this.deleting = true;
-    this.errorMessage = '';
+    this.errorMessage.set('');
     
     if (this.itemToDelete.type === 'directory') {
       this.directoryService.deleteDirectory(this.itemToDelete.id).subscribe({
@@ -210,13 +203,13 @@ export class DirectoryComponent implements OnInit {
           this.reloadCurrentDirectory();
         },
         error: (error) => {
-          this.errorMessage = 'Erro ao excluir diretório';
+          this.errorMessage.set('Erro ao excluir diretório');
           this.deleting = false;
           console.error('Error deleting directory:', error);
         }
       });
     } else {
-      this.directoryService.deleteDocument(this.currentDirectory.codigo_diretorio, this.itemToDelete.id).subscribe({
+      this.directoryService.deleteDocument(this.currentDirectory()!.codigo_diretorio, this.itemToDelete.id).subscribe({
         next: () => {
           this.deleting = false;
           this.closeDeleteConfirm();
@@ -225,9 +218,9 @@ export class DirectoryComponent implements OnInit {
         },
         error: (error) => {
           if (error.status === 422) {
-            this.errorMessage = 'O documento está associado a uma base de conhecimento.';
+            this.errorMessage.set('O documento está associado a uma base de conhecimento.');
           } else {
-            this.errorMessage = 'Erro ao excluir documento';
+            this.errorMessage.set('Erro ao excluir documento');
           }
           this.deleting = false;
           console.error('Error deleting document:', error);
@@ -237,19 +230,20 @@ export class DirectoryComponent implements OnInit {
   }
 
   reloadCurrentDirectory(): void {
-    if (this.currentDirectory) {
-      if (this.currentDirectory.codigo_diretorio === this.currentDirectory.codigo_proprietario) {
+    const dir = this.currentDirectory();
+    if (dir) {
+      if (dir.codigo_diretorio === dir.codigo_proprietario) {
         this.loadRootDirectory();
       } else {
-        this.loadDirectory(this.currentDirectory.codigo_diretorio);
+        this.loadDirectory(dir.codigo_diretorio);
       }
     }
   }
 
   showSuccess(message: string): void {
-    this.successMessage = message;
+    this.successMessage.set(message);
     setTimeout(() => {
-      this.successMessage = '';
+      this.successMessage.set('');
     }, 3000);
   }
 
@@ -259,20 +253,19 @@ export class DirectoryComponent implements OnInit {
   }
 
   isRootDirectory(): boolean {
-    if (!this.currentDirectory) return true;
-    return this.currentDirectory.codigo_diretorio === this.currentDirectory.codigo_proprietario;
+    const dir = this.currentDirectory();
+    if (!dir) return true;
+    return dir.codigo_diretorio === dir.codigo_proprietario;
   }
 
   goBack(): void {
-    if (!this.currentDirectory || this.isRootDirectory()) return;
+    const dir = this.currentDirectory();
+    if (!dir || this.isRootDirectory()) return;
     
-    this.loading = true;
-    this.cdr.detectChanges();
-    
-    const parentId = this.currentDirectory.codigo_diretorio_pai;
+    const parentId = dir.codigo_diretorio_pai;
     
     // Se o pai for o proprietário, carrega o diretório raiz
-    if (parentId === this.currentDirectory.codigo_proprietario) {
+    if (parentId === dir.codigo_proprietario) {
       this.loadRootDirectory();
     } else {
       // Caso contrário, carrega o diretório pai
