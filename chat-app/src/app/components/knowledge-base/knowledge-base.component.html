@@ -37,6 +37,7 @@
         @for (kb of knowledgeBases(); track kb.codigo_base_conhecimento) {
           <div class="knowledge-base-card">
             <div class="card-header" (click)="openDetails(kb)" style="cursor: pointer;">
+              <div class="kb-icon">📚</div>
               <h3>{{ kb.nome_base_conhecimento }}</h3>
               @if (kb.descricao_base_conhecimento) {
                 <p class="description">{{ kb.descricao_base_conhecimento }}</p>
@@ -51,10 +52,6 @@
               <div class="info-row">
                 <span class="label">Tamanho:</span>
                 <span class="value">{{ formatSize(kb.tamanho_base_conhecimento) }}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Documentos:</span>
-                <span class="value">{{ kb.documentos?.length || 0 }}</span>
               </div>
               <div class="info-row">
                 <span class="label">Criado em:</span>
