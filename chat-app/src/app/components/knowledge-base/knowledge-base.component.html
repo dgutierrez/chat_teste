@@ -1,4 +1,347 @@
 <div class="knowledge-base-container">
-  <h1>Base de Conhecimento</h1>
-  <p>Em breve: Funcionalidade de Base de Conhecimento será implementada aqui.</p>
+  <!-- Header com gradiente -->
+  <div class="header-wrapper">
+    <div class="header">
+      <h1>Base de Conhecimento</h1>
+      <button class="btn-primary" (click)="openCreateDialog()">
+        Nova Base de Conhecimento
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Mensagens -->
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        {{ successMessage() }}
+      </div>
+    }
+
+    <!-- Loading -->
+    @if (loading() && knowledgeBases().length === 0) {
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Carregando bases de conhecimento...</p>
+      </div>
+    }
+
+    <!-- Lista de Bases de Conhecimento -->
+    @if (!loading() || knowledgeBases().length > 0) {
+      <div class="knowledge-bases-grid">
+        @for (kb of knowledgeBases(); track kb.codigo_base_conhecimento) {
+          <div class="knowledge-base-card">
+            <div class="card-header" (click)="openDetails(kb)" style="cursor: pointer;">
+              <h3>{{ kb.nome_base_conhecimento }}</h3>
+              @if (kb.descricao_base_conhecimento) {
+                <p class="description">{{ kb.descricao_base_conhecimento }}</p>
+              }
+            </div>
+
+            <div class="card-body">
+              <div class="info-row">
+                <span class="label">Escopo:</span>
+                <span class="value">{{ kb.escopo_base_conhecimento }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Tamanho:</span>
+                <span class="value">{{ formatSize(kb.tamanho_base_conhecimento) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Documentos:</span>
+                <span class="value">{{ kb.documentos?.length || 0 }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Criado em:</span>
+                <span class="value">{{ formatDate(kb.data_criacao_base_conhecimento) }}</span>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button class="btn-secondary" (click)="openDocumentPicker(kb)">
+                Adicionar Arquivo
+              </button>
+              <button class="btn-danger" (click)="openDeleteConfirm(kb)">
+                Deletar
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">
+            <p>Nenhuma base de conhecimento encontrada.</p>
+            <p class="empty-hint">Crie uma nova base de conhecimento para começar.</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>
+
+<!-- Modal de Criação -->
+@if (showCreateDialog) {
+  <div class="modal-overlay" (click)="closeCreateDialog()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Nova Base de Conhecimento</h2>
+        <button class="close-btn" (click)="closeCreateDialog()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="kb-name">Nome *</label>
+          <input 
+            type="text" 
+            id="kb-name" 
+            [(ngModel)]="newKnowledgeBaseName" 
+            placeholder="Digite o nome da base de conhecimento"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="kb-description">Descrição</label>
+          <textarea 
+            id="kb-description" 
+            [(ngModel)]="newKnowledgeBaseDescription" 
+            placeholder="Digite uma descrição (opcional)"
+            class="form-input"
+            rows="4"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeCreateDialog()">Cancelar</button>
+        <button 
+          class="btn-confirm" 
+          (click)="createKnowledgeBase()"
+          [disabled]="!newKnowledgeBaseName.trim() || loading()"
+        >
+          {{ loading() ? 'Criando...' : 'Criar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de Confirmação de Deleção -->
+@if (showDeleteConfirm && knowledgeBaseToDelete) {
+  <div class="modal-overlay" (click)="closeDeleteConfirm()">
+    <div class="modal-content modal-small modal-danger" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirmar Deleção</h2>
+        <button class="close-btn" (click)="closeDeleteConfirm()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p>Tem certeza que deseja deletar a base de conhecimento:</p>
+        <p class="confirm-name">{{ knowledgeBaseToDelete.nome_base_conhecimento }}</p>
+        <p class="warning">Esta ação não pode ser desfeita.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeDeleteConfirm()">Cancelar</button>
+        <button 
+          class="btn-danger" 
+          (click)="confirmDelete()"
+          [disabled]="deleting"
+        >
+          {{ deleting ? 'Deletando...' : 'Deletar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de Seleção de Documentos -->
+@if (showDocumentPickerDialog && selectedKnowledgeBase) {
+  <div class="modal-overlay" (click)="closeDocumentPicker()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Adicionar Documentos - {{ selectedKnowledgeBase.nome_base_conhecimento }}</h2>
+        <button class="close-btn" (click)="closeDocumentPicker()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        @if (currentDirectory()) {
+          <div class="directory-browser">
+            <!-- Navegação -->
+            <div class="breadcrumb">
+              @if (currentDirectory()?.codigo_diretorio_pai) {
+                <button class="btn-link" (click)="navigateBack()">← Voltar</button>
+              }
+              <span class="current-path">{{ currentDirectory()?.nome_diretorio || 'Raiz' }}</span>
+            </div>
+
+            <!-- Lista de Diretórios -->
+            @if (currentDirectory()?.sub_diretorios && currentDirectory()!.sub_diretorios!.length > 0) {
+              <div class="directory-list">
+                <h3>Pastas</h3>
+                @for (dir of currentDirectory()!.sub_diretorios; track dir.codigo_diretorio) {
+                  <div class="directory-item" (click)="navigateToDirectory(dir)">
+                    <span class="icon">📁</span>
+                    <span class="name">{{ dir.nome_diretorio }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Lista de Documentos -->
+            @if (currentDirectory()?.documentos && currentDirectory()!.documentos!.length > 0) {
+              <div class="document-list">
+                <h3>Documentos</h3>
+                @for (doc of currentDirectory()!.documentos; track doc.codigo_documento) {
+                  <div 
+                    class="document-item" 
+                    [class.selected]="isDocumentSelected(doc)"
+                    (click)="toggleDocumentSelection(doc)"
+                  >
+                    <input 
+                      type="checkbox" 
+                      [checked]="isDocumentSelected(doc)"
+                      (click)="$event.stopPropagation()"
+                      (change)="toggleDocumentSelection(doc)"
+                    />
+                    <span class="icon">📄</span>
+                    <span class="name">{{ doc.nome_documento }}</span>
+                    @if (doc.status_documento) {
+                      <span class="status" [class]="'status-' + doc.status_documento.toLowerCase()">
+                        {{ doc.status_documento }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            } @else if (!currentDirectory()?.sub_diretorios || currentDirectory()!.sub_diretorios!.length === 0) {
+              <p class="empty-message">Nenhum arquivo encontrado nesta pasta.</p>
+            }
+
+            <!-- Documentos Selecionados -->
+            @if (selectedDocuments.length > 0) {
+              <div class="selected-summary">
+                <strong>{{ selectedDocuments.length }}</strong> documento(s) selecionado(s)
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando diretório...</p>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeDocumentPicker()">Cancelar</button>
+        <button 
+          class="btn-confirm" 
+          (click)="addSelectedDocuments()"
+          [disabled]="selectedDocuments.length === 0 || addingDocuments"
+        >
+          {{ addingDocuments ? 'Adicionando...' : 'Adicionar Selecionados' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de Detalhes -->
+@if (showDetailsDialog) {
+  <div class="modal-overlay" (click)="closeDetails()">
+    <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Detalhes da Base de Conhecimento</h2>
+        <button class="close-btn" (click)="closeDetails()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        @if (loadingDetails()) {
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Carregando detalhes...</p>
+          </div>
+        } @else if (detailsKnowledgeBase()) {
+          <div class="details-container">
+            <!-- Informações Gerais -->
+            <div class="details-section">
+              <h3 class="details-title">{{ detailsKnowledgeBase()!.nome_base_conhecimento }}</h3>
+              @if (detailsKnowledgeBase()!.descricao_base_conhecimento) {
+                <p class="details-description">{{ detailsKnowledgeBase()!.descricao_base_conhecimento }}</p>
+              }
+            </div>
+
+            <!-- Informações Detalhadas -->
+            <div class="details-section">
+              <div class="details-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Escopo:</span>
+                  <span class="detail-value">{{ detailsKnowledgeBase()!.escopo_base_conhecimento }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Tamanho Total:</span>
+                  <span class="detail-value">{{ formatSize(detailsKnowledgeBase()!.tamanho_base_conhecimento) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Total de Documentos:</span>
+                  <span class="detail-value">{{ detailsKnowledgeBase()!.documentos?.length || 0 }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Criado em:</span>
+                  <span class="detail-value">{{ formatDate(detailsKnowledgeBase()!.data_criacao_base_conhecimento) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lista de Documentos -->
+            <div class="details-section">
+              <h4 class="section-title">Documentos Anexados</h4>
+              @if (detailsKnowledgeBase()!.documentos && detailsKnowledgeBase()!.documentos!.length > 0) {
+                <div class="documents-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Nome do Documento</th>
+                        <th>Status</th>
+                        <th>Data de Criação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (doc of detailsKnowledgeBase()!.documentos; track doc.codigo_documento) {
+                        <tr>
+                          <td class="doc-name">
+                            <span class="doc-icon">📄</span>
+                            {{ doc.nome_documento }}
+                          </td>
+                          <td>
+                            <span class="status" [class]="'status-' + doc.status_documento.toLowerCase()">
+                              {{ doc.status_documento }}
+                            </span>
+                          </td>
+                          <td>{{ formatDate(doc.data_criacao_documento) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <div class="empty-documents">
+                  <p>Nenhum documento anexado a esta base de conhecimento.</p>
+                  <p class="empty-hint">Use o botão "Adicionar Arquivo" para incluir documentos.</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeDetails()">Fechar</button>
+      </div>
+    </div>
+  </div>
+}
